@@ -2,7 +2,7 @@
 
 public interface IHasDomainEvents
 {
-    public List<IDomainEvent> DomainEvents { get; }
+    IReadOnlyCollection<IDomainEvent> DomainEvents { get; }
 
     void ClearDomainEvents();
 }
