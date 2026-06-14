@@ -1,4 +1,4 @@
-Billing.Api (.NET 8, EF Core, architecture, license) — swap the placeholder repo URL/license as needed
+Billing.Api (.NET 8, EF Core, architecture, license) 
 Why this exists — the DDD/clean-architecture pitch
 Features table — every capability we built (multi-tenancy, auditing, soft delete, outbox, CQRS, no-repos)
 Architecture + project layout diagrams showing the dependency rule
