@@ -17,7 +17,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
-builder.Services.AddAuthorization()
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
