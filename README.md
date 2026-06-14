@@ -1,1 +1,1 @@
-Billing.Api (.NET 8, EF Core, architecture, license) 
+Billing.Api (.NET 8, EF Core, architecture) 
