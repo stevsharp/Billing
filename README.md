@@ -146,3 +146,8 @@ Generate a development token with any JWT tool (e.g. [jwt.io](https://jwt.io)) u
 - **Outbox pattern** — domain events are persisted in the same transaction as the aggregate, then published asynchronously by `OutboxPublisher`, preventing dual-write failures.
 - **CQRS** — write model uses a tracked `BillingWriteContext`; read model uses a no-tracking `BillingReadContext` pointed at a read replica.
 - **Pipeline behaviours** — MediatR pipelines handle validation (`ValidationBehavior`) and transactions (`TransactionBehavior`) cross-cutting, keeping handlers clean.
+
+
+## Connect with Me
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue)](https://www.linkedin.com/in/spyros-ponaris-913a6937/)
