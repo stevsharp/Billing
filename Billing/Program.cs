@@ -1,18 +1,36 @@
+using Billing.Api.Endpoints;
 using Billing.Application;
-using Billing.Application.Common.Invoices.Command.Cancel;
-using Billing.Application.Common.Invoices.Command.Create;
-using Billing.Application.Common.Invoices.Command.Pending;
 using Billing.Infrastructure;
 
 using FluentValidation;
 
-using MediatR;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Billing API", Version = "v1" });
+
+    var bearer = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Paste your JWT here. Format: Bearer {token}",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme }
+    };
+
+    c.AddSecurityDefinition(bearer.Reference.Id, bearer);
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement { [bearer] = Array.Empty<string>() });
+});
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -29,8 +47,13 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Billing API v1");
+        c.RoutePrefix = "swagger";
+    });
 }
-
 
 app.UseExceptionHandler(handler => handler.Run(async ctx =>
 {
@@ -46,27 +69,9 @@ app.UseExceptionHandler(handler => handler.Run(async ctx =>
     await ctx.Response.WriteAsJsonAsync(new { error = message });
 }));
 
-var invoices = app.MapGroup("/invoices").RequireAuthorization();
-
-invoices.MapPost("/", async (IssueInvoiceCommand cmd, ISender sender) =>
-{
-    var id = await sender.Send(cmd);
-    return Results.Created($"/invoices/{id}", new { id });
-});
-
-invoices.MapPost("/{id:guid}/cancel", async (Guid id, CancelRequest body, ISender sender) =>
-{
-    await sender.Send(new CancelInvoiceCommand(id, body.Reason));
-    return Results.NoContent();
-});
-
-invoices.MapGet("/pending", async (ISender sender) =>
-    Results.Ok(await sender.Send(new GetPendingInvoicesQuery())));
+app.MapAuthEndpoints();
+app.MapInvoiceEndpoints();
 
 app.Run();
 
-
-
-
-public sealed record CancelRequest(string Reason);
-public partial class Program; 
+public partial class Program;

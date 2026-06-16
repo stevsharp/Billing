@@ -18,8 +18,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration cfg)
     {
-        var secretKey = cfg["Jwt:SecretKey"]
-            ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
+        services.AddOptions<JwtOptions>()
+            .Bind(cfg.GetSection(JwtOptions.SectionName))
+            .Validate(o => !string.IsNullOrWhiteSpace(o.SecretKey) && o.SecretKey.Length >= 32,
+                "Jwt:SecretKey must be configured and at least 32 characters.")
+            .ValidateOnStart();
+
+        var jwt = cfg.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+            ?? throw new InvalidOperationException("Jwt section is not configured.");
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(opt =>
@@ -27,12 +33,12 @@ public static class DependencyInjection
                 opt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = cfg["Jwt:Issuer"],
+                    ValidIssuer = jwt.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = cfg["Jwt:Audience"],
+                    ValidAudience = jwt.Audience,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SecretKey)),
                     ClockSkew = TimeSpan.Zero
                 };
             });
@@ -41,6 +47,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
         services.AddScoped<ITenantProvider, HttpTenantProvider>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<DomainInterceptor>();
 
         services.AddDbContext<BillingWriteContext>((sp, opt) =>
